@@ -12,6 +12,7 @@ const POLL_INTERVAL_MS = 50;
 const TIMEOUT_MS = 5000;
 
 export class FileBridgeTransport implements Transport {
+  readonly name = "file";
   private bridgeDir: string;
   private lastHeartbeat: Date | null = null;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;

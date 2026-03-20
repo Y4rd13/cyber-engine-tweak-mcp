@@ -7,8 +7,7 @@ import type { Transport } from "../transport/index.js";
 export function registerDevTools(
   server: McpServer,
   getTransport: () => Transport,
-  bridgeDir: string,
-  transportType?: string
+  bridgeDir: string
 ): void {
   server.tool(
     "get_connection_status",
@@ -22,7 +21,7 @@ export function registerDevTools(
 
         const status = {
           connected,
-          transport: transportType ?? "file",
+          transport: transport.name,
           bridgeDir,
           lastHeartbeat: heartbeat ? heartbeat.toISOString() : null,
         };

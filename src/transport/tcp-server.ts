@@ -12,6 +12,7 @@ interface PendingRequest {
 }
 
 export class TcpServerTransport implements Transport {
+  readonly name = "tcp";
   private server: Server;
   private client: Socket | null = null;
   private pending = new Map<string, PendingRequest>();
@@ -33,6 +34,10 @@ export class TcpServerTransport implements Transport {
         reject(err);
       });
     });
+  }
+
+  async waitReady(): Promise<void> {
+    return this.ready;
   }
 
   private handleConnection(socket: Socket): void {

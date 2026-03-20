@@ -35,7 +35,7 @@ export async function createServer(config: ServerConfig): Promise<McpServer> {
 
   registerExecutionTools(server, getTransport);
   registerGameStateTools(server, getTransport);
-  registerDevTools(server, getTransport, config.bridgeDir, config.transportType);
+  registerDevTools(server, getTransport, config.bridgeDir);
   registerTweakDBTools(server, getTransport);
   registerObservationTools(server, getTransport);
   registerInventoryTools(server, getTransport);
