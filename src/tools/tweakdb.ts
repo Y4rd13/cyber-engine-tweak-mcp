@@ -81,4 +81,34 @@ export function registerTweakDBTools(
       }
     }
   );
+
+  server.tool(
+    "search_tweakdb",
+    "Search TweakDB records by pattern. Returns matching record paths. Useful for finding item IDs, stat paths, etc. Example: search for 'Katana' to find all katana-related records.",
+    {
+      pattern: z.string().describe("Search pattern (case-insensitive substring match)"),
+      type: z
+        .string()
+        .optional()
+        .describe("Filter by record type (e.g., 'gamedataItem_Record')"),
+      limit: z
+        .number()
+        .optional()
+        .default(20)
+        .describe("Max results to return (default: 20)"),
+    },
+    async ({ pattern, type, limit }) => {
+      try {
+        const transport = getTransport();
+        const request = createRequest("query", {
+          handler: "search_tweakdb",
+          args: { pattern, type, limit },
+        });
+        const response = await transport.send(request);
+        return formatToolResult(response);
+      } catch (e) {
+        return formatError(e instanceof Error ? e.message : String(e));
+      }
+    }
+  );
 }

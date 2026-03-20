@@ -5,7 +5,7 @@
       "args": ["build/index.js"],
       "env": {
         "CET_BRIDGE_DIR": "/mnt/g/SteamLibrary/steamapps/common/Cyberpunk 2077/bin/x64/plugins/cyber_engine_tweaks/mods/CETBridge",
-        "CET_TRANSPORT": "file"
+        "CET_TRANSPORT": "tcp"
       }
     }
   }

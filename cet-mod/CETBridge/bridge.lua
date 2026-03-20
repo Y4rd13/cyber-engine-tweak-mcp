@@ -5,13 +5,80 @@ local handlers = require("handlers")
 
 local bridge = {
     initialized = false,
-    heartbeatTimer = 0
+    heartbeatTimer = 0,
+    socket = nil,
+    tcpConnected = false
 }
 
 function bridge:Init()
     self.initialized = true
-    self:WriteHeartbeat()
+
+    if config.transport == "tcp" then
+        self:InitTcp()
+    else
+        self:WriteHeartbeat()
+    end
+
     print("[CETBridge] Bridge initialized (transport: " .. config.transport .. ")")
+end
+
+function bridge:InitTcp()
+    local RedSocket = GetMod("RedSocket")
+    if not RedSocket then
+        print("[CETBridge] RedSocket not found, falling back to file transport")
+        config.transport = "file"
+        self:WriteHeartbeat()
+        return
+    end
+
+    self.socket = RedSocket:new()
+
+    self.socket:RegisterListener(
+        -- onCommand: received data from MCP server
+        function(data)
+            local ok, request = pcall(json.decode, data)
+            if not ok or not request then
+                print("[CETBridge] Failed to parse TCP command: " .. tostring(request))
+                return
+            end
+
+            local response = self:Execute(request)
+            self:TcpSend(response)
+        end,
+        -- onConnection
+        function(status)
+            self.tcpConnected = true
+            print("[CETBridge] TCP connected (status: " .. tostring(status) .. ")")
+        end,
+        -- onDisconnection
+        function()
+            self.tcpConnected = false
+            print("[CETBridge] TCP disconnected")
+        end,
+        -- onError
+        function()
+            print("[CETBridge] TCP send failed (retries exhausted)")
+        end
+    )
+
+    self.socket:Connect(config.tcp_host, config.tcp_port)
+end
+
+function bridge:TcpSend(data)
+    if not self.socket or not self.tcpConnected then return end
+
+    local ok, encoded = pcall(json.encode, data)
+    if not ok then
+        local fallback = json.encode({
+            id = data.id or "unknown",
+            ok = false,
+            error = "Failed to encode response: " .. tostring(encoded)
+        })
+        self.socket:SendCommand(fallback)
+        return
+    end
+
+    self.socket:SendCommand(encoded)
 end
 
 function bridge:Update(dt)
@@ -21,12 +88,27 @@ function bridge:Update(dt)
     self.heartbeatTimer = self.heartbeatTimer + dt
     if self.heartbeatTimer >= config.heartbeat_interval then
         self.heartbeatTimer = 0
-        self:WriteHeartbeat()
+
+        if config.transport == "tcp" then
+            self:TcpHeartbeat()
+        else
+            self:WriteHeartbeat()
+        end
     end
 
-    -- Poll for commands (file transport)
+    -- Poll for commands (file transport only)
     if config.transport == "file" then
         self:PollFileCommand()
+    end
+end
+
+function bridge:TcpHeartbeat()
+    if self.tcpConnected and self.socket then
+        self:TcpSend({
+            type = "heartbeat",
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+            version = "0.1.0"
+        })
     end
 end
 
@@ -38,7 +120,6 @@ function bridge:PollFileCommand()
     local content = file:read("*a")
     file:close()
 
-    -- Delete command file immediately to signal receipt
     os.remove(cmdPath)
 
     if not content or content == "" then return end
@@ -57,7 +138,6 @@ function bridge:PollFileCommand()
         resJson = json.encode(response)
     end
 
-    -- Atomic write: tmp then rename
     local tmpPath = "response.json.tmp"
     local resPath = "response.json"
     local tmpFile = io.open(tmpPath, "w")
@@ -88,7 +168,6 @@ function bridge:ExecCode(id, code)
         return {id = id, ok = false, error = "No code provided"}
     end
 
-    -- Capture print output
     local output = {}
     local originalPrint = print
     print = function(...)
@@ -177,7 +256,14 @@ end
 
 function bridge:Shutdown()
     self.initialized = false
-    -- Clean up files
+
+    if config.transport == "tcp" and self.socket then
+        pcall(function() self.socket:Disconnect() end)
+        pcall(function() self.socket:Destroy() end)
+        self.socket = nil
+        self.tcpConnected = false
+    end
+
     pcall(os.remove, "heartbeat.json")
     pcall(os.remove, "command.json")
     pcall(os.remove, "response.json")

@@ -17,5 +17,10 @@ export async function createTransport(
     const { FileBridgeTransport } = await import("./file-bridge.js");
     return new FileBridgeTransport(bridgeDir);
   }
-  throw new Error(`Transport "${type}" not yet implemented`);
+  if (type === "tcp") {
+    const { TcpServerTransport } = await import("./tcp-server.js");
+    const port = parseInt(process.env.CET_TCP_PORT ?? "27010", 10);
+    return new TcpServerTransport(port);
+  }
+  throw new Error(`Transport "${type}" not supported`);
 }

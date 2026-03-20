@@ -1,5 +1,5 @@
 local config = {
-    transport = "file",
+    transport = "tcp",
     tcp_host = "127.0.0.1",
     tcp_port = 27010,
     poll_interval = 0,

@@ -6,6 +6,7 @@ import { registerExecutionTools } from "./tools/execution.js";
 import { registerGameStateTools } from "./tools/game-state.js";
 import { registerDevTools } from "./tools/dev-tools.js";
 import { registerTweakDBTools } from "./tools/tweakdb.js";
+import { registerObservationTools } from "./tools/observation.js";
 
 export interface ServerConfig {
   bridgeDir: string;
@@ -31,8 +32,9 @@ export async function createServer(config: ServerConfig): Promise<McpServer> {
 
   registerExecutionTools(server, getTransport);
   registerGameStateTools(server, getTransport);
-  registerDevTools(server, getTransport, config.bridgeDir);
+  registerDevTools(server, getTransport, config.bridgeDir, config.transportType);
   registerTweakDBTools(server, getTransport);
+  registerObservationTools(server, getTransport);
 
   return server;
 }

@@ -39,4 +39,51 @@ export function registerGameStateTools(
       }
     }
   );
+
+  server.tool(
+    "add_item",
+    "Add an item to the player's inventory by TweakDB item ID. Example: 'Items.Preset_Katana_Saburo' for Satori katana. Quantity defaults to 1.",
+    {
+      itemId: z
+        .string()
+        .describe("TweakDB item ID (e.g., 'Items.Preset_Katana_Saburo')"),
+      quantity: z.number().optional().default(1).describe("Number of items to add (default: 1)"),
+    },
+    async ({ itemId, quantity }) => {
+      try {
+        const transport = getTransport();
+        const request = createRequest("query", {
+          handler: "add_item",
+          args: { itemId, quantity },
+        });
+        const response = await transport.send(request);
+        return formatToolResult(response);
+      } catch (e) {
+        return formatError(e instanceof Error ? e.message : String(e));
+      }
+    }
+  );
+
+  server.tool(
+    "teleport",
+    "Teleport the player to specific world coordinates. Use get_player_info first to see current position for reference.",
+    {
+      x: z.number().describe("X coordinate"),
+      y: z.number().describe("Y coordinate"),
+      z: z.number().describe("Z coordinate"),
+    },
+    async (args) => {
+      try {
+        const transport = getTransport();
+        const request = createRequest("query", {
+          handler: "teleport",
+          args: { x: args.x, y: args.y, z: args.z },
+        });
+        const response = await transport.send(request);
+        return formatToolResult(response);
+      } catch (e) {
+        return formatError(e instanceof Error ? e.message : String(e));
+      }
+    }
+  );
 }

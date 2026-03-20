@@ -246,4 +246,208 @@ function handlers.dump_type(args)
     return info
 end
 
+-- Phase 3 handlers
+
+local subscriptions = {}
+local subCounter = 0
+
+function handlers.observe_events(args)
+    if not args or not args.className or not args.eventName then
+        return nil, "className and eventName are required"
+    end
+
+    subCounter = subCounter + 1
+    local subId = "sub_" .. tostring(subCounter)
+    local maxBuffer = args.maxBuffer or 50
+
+    subscriptions[subId] = {
+        className = args.className,
+        eventName = args.eventName,
+        events = {},
+        maxBuffer = maxBuffer
+    }
+
+    local ok, err = pcall(function()
+        ObserveAfter(args.className, args.eventName, function(self, ...)
+            local sub = subscriptions[subId]
+            if not sub then return end
+
+            local entry = {
+                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+                args = {}
+            }
+
+            local eventArgs = {...}
+            for i, arg in ipairs(eventArgs) do
+                local aok, aval = pcall(tostring, arg)
+                entry.args[i] = aok and aval or "[unserializable]"
+            end
+
+            table.insert(sub.events, entry)
+            if #sub.events > sub.maxBuffer then
+                table.remove(sub.events, 1)
+            end
+        end)
+    end)
+
+    if not ok then
+        subscriptions[subId] = nil
+        return nil, "Failed to observe: " .. tostring(err)
+    end
+
+    return {
+        subscriptionId = subId,
+        className = args.className,
+        eventName = args.eventName,
+        maxBuffer = maxBuffer
+    }
+end
+
+function handlers.get_observations(args)
+    if not args or not args.subscriptionId then
+        return nil, "subscriptionId is required"
+    end
+
+    local sub = subscriptions[args.subscriptionId]
+    if not sub then
+        return nil, "Subscription not found: " .. tostring(args.subscriptionId)
+    end
+
+    local events = sub.events
+    sub.events = {}
+
+    return {
+        subscriptionId = args.subscriptionId,
+        className = sub.className,
+        eventName = sub.eventName,
+        count = #events,
+        events = events
+    }
+end
+
+function handlers.batch_execute(args)
+    if not args or not args.commands then
+        return nil, "commands array is required"
+    end
+
+    local results = {}
+    for i, code in ipairs(args.commands) do
+        local fn, loadErr = loadstring(code)
+        if not fn then
+            results[i] = {ok = false, error = "Syntax error: " .. tostring(loadErr)}
+        else
+            local ok, execErr = pcall(fn)
+            if ok then
+                results[i] = {ok = true}
+            else
+                results[i] = {ok = false, error = "Runtime error: " .. tostring(execErr)}
+            end
+        end
+    end
+
+    return {count = #results, results = results}
+end
+
+function handlers.add_item(args)
+    if not args or not args.itemId then
+        return nil, "itemId is required"
+    end
+
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local quantity = args.quantity or 1
+    local tdbid = TweakDBID.new(args.itemId)
+
+    local ok, err = pcall(function()
+        local transSystem = Game.GetTransactionSystem()
+        local itemID = ItemID.new(tdbid)
+        transSystem:GiveItem(player, itemID, quantity)
+    end)
+
+    if not ok then
+        return nil, "Failed to add item: " .. tostring(err)
+    end
+
+    return {itemId = args.itemId, quantity = quantity, success = true}
+end
+
+function handlers.teleport(args)
+    if not args or not args.x or not args.y or not args.z then
+        return nil, "x, y, z coordinates are required"
+    end
+
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local ok, err = pcall(function()
+        local pos = Vector4.new(args.x, args.y, args.z, 1.0)
+        local angle = player:GetWorldOrientation():IsValid() and player:GetWorldOrientation() or EulerAngles.new(0, 0, 0):ToQuat()
+        Game.GetTeleportationFacility():Teleport(player, pos, angle)
+    end)
+
+    if not ok then
+        return nil, "Failed to teleport: " .. tostring(err)
+    end
+
+    return {x = args.x, y = args.y, z = args.z, success = true}
+end
+
+function handlers.search_tweakdb(args)
+    if not args or not args.pattern then
+        return nil, "pattern is required"
+    end
+
+    local pattern = string.lower(args.pattern)
+    local limit = args.limit or 20
+    local filterType = args.type
+
+    local results = {}
+    local count = 0
+
+    local ok, err = pcall(function()
+        local flatList = TweakDB:GetRecords()
+        if not flatList then return end
+
+        for _, record in ipairs(flatList) do
+            if count >= limit then break end
+
+            local rok, path = pcall(function()
+                return TDBID.ToStringDEBUG(record:GetID())
+            end)
+
+            if rok and path and string.find(string.lower(path), pattern, 1, true) then
+                local entry = {path = path}
+
+                if filterType then
+                    local tok, typeName = pcall(function()
+                        return NameToString(record:GetClassName())
+                    end)
+                    if tok and typeName == filterType then
+                        entry.type = typeName
+                        table.insert(results, entry)
+                        count = count + 1
+                    end
+                else
+                    pcall(function()
+                        entry.type = NameToString(record:GetClassName())
+                    end)
+                    table.insert(results, entry)
+                    count = count + 1
+                end
+            end
+        end
+    end)
+
+    if not ok then
+        return nil, "Search failed: " .. tostring(err)
+    end
+
+    return {pattern = args.pattern, count = count, results = results}
+end
+
 return handlers

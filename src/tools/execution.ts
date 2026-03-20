@@ -43,4 +43,27 @@ export function registerExecutionTools(
       }
     }
   );
+
+  server.tool(
+    "batch_execute",
+    "Execute multiple Lua statements sequentially in a single bridge round-trip. More efficient than multiple execute_lua calls. Each statement runs independently — a failure in one does not stop the rest.",
+    {
+      commands: z
+        .array(z.string())
+        .describe("Array of Lua code strings to execute sequentially"),
+    },
+    async ({ commands }) => {
+      try {
+        const transport = getTransport();
+        const request = createRequest("query", {
+          handler: "batch_execute",
+          args: { commands },
+        });
+        const response = await transport.send(request);
+        return formatToolResult(response);
+      } catch (e) {
+        return formatError(e instanceof Error ? e.message : String(e));
+      }
+    }
+  );
 }
