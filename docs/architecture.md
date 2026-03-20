@@ -4,7 +4,7 @@ A Model Context Protocol (MCP) server that bridges Claude Code with Cyber Engine
 
 ## System Overview
 
-![Architecture Overview](svg/architecture-overview.svg)
+![Architecture Overview](assets/architecture-overview.svg)
 
 The system consists of three components spanning two OS processes:
 
@@ -16,7 +16,7 @@ The system consists of three components spanning two OS processes:
 
 ## Communication Architecture
 
-![Communication Flow](svg/communication-flow.svg)
+![Communication Flow](assets/communication-flow.svg)
 
 ### Primary: TCP via RedSocket
 
@@ -55,7 +55,7 @@ When RedSocket is not installed, the system falls back to file-based communicati
 
 ## CET Bridge Mod Lifecycle
 
-![CET Mod Lifecycle](svg/cet-mod-lifecycle.svg)
+![CET Mod Lifecycle](assets/cet-mod-lifecycle.svg)
 
 ### Event Registration (Root Level)
 ```lua
@@ -84,7 +84,7 @@ Each frame:
 
 ## MCP Tool Registry
 
-![MCP Tools Map](svg/mcp-tools-map.svg)
+![MCP Tools Map](assets/mcp-tools-map.svg)
 
 ### Core Tools
 
@@ -146,13 +146,14 @@ cyber-engine-tweak-mcp/
 │   ├── index.ts                  # Entry point, stdio transport setup
 │   ├── server.ts                 # MCP server + tool registration
 │   ├── transport/
-│   │   ├── tcp-client.ts         # TCP client for RedSocket
-│   │   └── file-bridge.ts        # File-based IPC fallback
+│   │   ├── tcp-server.ts         # TCP server for RedSocket connections
+│   │   ├── file-bridge.ts        # File-based IPC fallback
+│   │   └── index.ts              # Transport interface + factory
 │   ├── tools/
 │   │   ├── execution.ts          # execute_lua, evaluate, batch
-│   │   ├── game-state.ts         # player info, game state, dump
-│   │   ├── tweakdb.ts            # TweakDB read/write/search
-│   │   ├── dev-tools.ts          # logs, mods, reload, status
+│   │   ├── game-state.ts         # player info, game state, add_item, teleport
+│   │   ├── tweakdb.ts            # TweakDB read/write/search/dump
+│   │   ├── dev-tools.ts          # connection status, logs, mods
 │   │   └── observation.ts        # event observation tools
 │   └── utils/
 │       ├── protocol.ts           # JSON command/response protocol
@@ -163,10 +164,11 @@ cyber-engine-tweak-mcp/
 │       ├── bridge.lua            # Command dispatcher + executor
 │       ├── handlers.lua          # Built-in query handlers
 │       ├── serializer.lua        # Lua → JSON serializer
-│       └── config.lua            # Bridge configuration (port, etc.)
+│       ├── config.lua            # Bridge configuration (port, etc.)
+│       └── json.lua              # Bundled rxi/json.lua (MIT)
 ├── docs/
 │   ├── architecture.md           # This file
-│   ├── svg/                      # Architecture diagrams
+│   ├── assets/                      # Architecture diagrams
 │   └── cet-modding-guide.md      # CET modding reference
 ├── .mcp.json                     # Claude Code MCP configuration
 ├── package.json
