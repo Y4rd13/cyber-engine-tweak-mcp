@@ -1,14 +1,22 @@
-local bridge = require("bridge")
+local ok, bridge = pcall(require, "bridge")
+if not ok then
+    print("[CETBridge] FATAL: failed to load bridge module: " .. tostring(bridge))
+    return
+end
 
 registerForEvent("onInit", function()
-    print("[CETBridge] Ready")
-    bridge:Init()
+    local initOk, err = pcall(function() bridge:Init() end)
+    if initOk then
+        print("[CETBridge] Ready")
+    else
+        print("[CETBridge] Init failed: " .. tostring(err))
+    end
 end)
 
 registerForEvent("onUpdate", function(dt)
-    bridge:Update(dt)
+    pcall(function() bridge:Update(dt) end)
 end)
 
 registerForEvent("onShutdown", function()
-    bridge:Shutdown()
+    pcall(function() bridge:Shutdown() end)
 end)

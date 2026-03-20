@@ -14,7 +14,12 @@ function bridge:Init()
     self.initialized = true
 
     if config.transport == "tcp" then
-        self:InitTcp()
+        local ok, err = pcall(function() self:InitTcp() end)
+        if not ok then
+            print("[CETBridge] TCP init failed: " .. tostring(err) .. ", falling back to file")
+            config.transport = "file"
+            self:WriteHeartbeat()
+        end
     else
         self:WriteHeartbeat()
     end
@@ -23,15 +28,16 @@ function bridge:Init()
 end
 
 function bridge:InitTcp()
-    local RedSocket = GetMod("RedSocket")
-    if not RedSocket then
+    local ok, rsApi = pcall(GetMod, "RedSocket")
+    if not ok or not rsApi then
         print("[CETBridge] RedSocket not found, falling back to file transport")
         config.transport = "file"
         self:WriteHeartbeat()
         return
     end
 
-    self.socket = RedSocket:new()
+    self.redSocketApi = rsApi
+    self.socket = rsApi.createSocket()
 
     self.socket:RegisterListener(
         -- onCommand: received data from MCP server
@@ -69,12 +75,14 @@ function bridge:TcpSend(data)
 
     local ok, encoded = pcall(json.encode, data)
     if not ok then
-        local fallback = json.encode({
-            id = data.id or "unknown",
+        local fok, fallback = pcall(json.encode, {
+            id = (type(data) == "table" and data.id) or "unknown",
             ok = false,
-            error = "Failed to encode response: " .. tostring(encoded)
+            error = "Failed to encode response"
         })
-        self.socket:SendCommand(fallback)
+        if fok then
+            self.socket:SendCommand(fallback)
+        end
         return
     end
 
@@ -259,7 +267,9 @@ function bridge:Shutdown()
 
     if config.transport == "tcp" and self.socket then
         pcall(function() self.socket:Disconnect() end)
-        pcall(function() self.socket:Destroy() end)
+        if self.redSocketApi then
+            pcall(function() self.redSocketApi.destroySocket(self.socket) end)
+        end
         self.socket = nil
         self.tcpConnected = false
     end
