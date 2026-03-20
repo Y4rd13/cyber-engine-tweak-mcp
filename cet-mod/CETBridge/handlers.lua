@@ -450,4 +450,435 @@ function handlers.search_tweakdb(args)
     return {pattern = args.pattern, count = count, results = results}
 end
 
+-- Inventory handlers
+
+function handlers.get_inventory(args)
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local limit = (args and args.limit) or 50
+    local filterType = args and args.type
+    local items = {}
+    local count = 0
+
+    local ok, err = pcall(function()
+        local transSystem = Game.GetTransactionSystem()
+        local itemList = transSystem:GetItemList(player)
+
+        for _, itemData in ipairs(itemList) do
+            if count >= limit then break end
+
+            local itemId = itemData:GetID()
+            local tdbId = itemId.tdbid
+            local path = TDBID.ToStringDEBUG(tdbId)
+
+            local itemType = "Unknown"
+            pcall(function()
+                local record = TweakDB:GetRecord(tdbId)
+                if record then
+                    itemType = NameToString(record:GetClassName())
+                end
+            end)
+
+            local shouldInclude = true
+            if filterType then
+                shouldInclude = string.find(itemType, filterType, 1, true) ~= nil
+            end
+
+            if shouldInclude then
+                local entry = {
+                    id = path,
+                    type = itemType,
+                    quantity = transSystem:GetItemQuantity(player, itemId)
+                }
+
+                pcall(function()
+                    local nameRecord = TweakDB:GetRecord(tdbId)
+                    if nameRecord then
+                        local locKey = nameRecord:DisplayName()
+                        if locKey then
+                            entry.name = Game.GetLocalizedText(locKey)
+                        end
+                    end
+                end)
+
+                table.insert(items, entry)
+                count = count + 1
+            end
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to get inventory: " .. tostring(err)
+    end
+
+    return {count = count, items = items}
+end
+
+function handlers.remove_item(args)
+    if not args or not args.itemId then
+        return nil, "itemId is required"
+    end
+
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local ok, err = pcall(function()
+        local transSystem = Game.GetTransactionSystem()
+        local tdbid = TweakDBID.new(args.itemId)
+        local itemID = ItemID.new(tdbid)
+
+        if args.quantity then
+            transSystem:RemoveItem(player, itemID, args.quantity)
+        else
+            local qty = transSystem:GetItemQuantity(player, itemID)
+            if qty > 0 then
+                transSystem:RemoveItem(player, itemID, qty)
+            end
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to remove item: " .. tostring(err)
+    end
+
+    return {itemId = args.itemId, quantity = args.quantity or "all", success = true}
+end
+
+function handlers.get_equipped(args)
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local equipped = {weapons = {}, clothing = {}}
+
+    local ok, err = pcall(function()
+        local transSystem = Game.GetTransactionSystem()
+        local equipSystem = Game.GetScriptableSystemsContainer():Get("EquipmentSystem")
+
+        -- Get equipped weapons (3 weapon slots)
+        for slot = 0, 2 do
+            pcall(function()
+                local slotName = "AttachmentSlots.WeaponRight"
+                if slot == 1 then slotName = "AttachmentSlots.WeaponLeft" end
+                if slot == 2 then slotName = "AttachmentSlots.WeaponHeavy" end
+
+                local itemObj = transSystem:GetItemInSlot(player, TweakDBID.new(slotName))
+                if itemObj then
+                    local itemId = itemObj:GetItemID()
+                    local path = TDBID.ToStringDEBUG(itemId.tdbid)
+                    table.insert(equipped.weapons, {
+                        slot = slot,
+                        id = path
+                    })
+                end
+            end)
+        end
+
+        -- Get equipped clothing
+        local clothingSlots = {
+            "AttachmentSlots.Outfit",
+            "AttachmentSlots.Head",
+            "AttachmentSlots.Face",
+            "AttachmentSlots.InnerChest",
+            "AttachmentSlots.OuterChest",
+            "AttachmentSlots.Legs",
+            "AttachmentSlots.Feet"
+        }
+
+        for _, slotName in ipairs(clothingSlots) do
+            pcall(function()
+                local itemObj = transSystem:GetItemInSlot(player, TweakDBID.new(slotName))
+                if itemObj then
+                    local itemId = itemObj:GetItemID()
+                    local path = TDBID.ToStringDEBUG(itemId.tdbid)
+                    table.insert(equipped.clothing, {
+                        slot = slotName,
+                        id = path
+                    })
+                end
+            end)
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to get equipment: " .. tostring(err)
+    end
+
+    return equipped
+end
+
+-- Player stat handlers
+
+function handlers.set_stat(args)
+    if not args or not args.stat or not args.value then
+        return nil, "stat and value are required"
+    end
+
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local ok, err = pcall(function()
+        local statType = gamedataStatType[args.stat]
+        if not statType then
+            error("Unknown stat type: " .. tostring(args.stat))
+        end
+
+        local statsSystem = Game.GetStatsSystem()
+        local playerID = player:GetEntityID()
+        local modGroup = statsSystem:GetModifierGroupForObject(playerID)
+
+        -- Remove existing modifiers and add a flat modifier
+        local modifier = gameStatModifierData.new()
+        modifier.modifierType = gameStatModifierType.Additive
+        modifier.statType = statType
+        modifier.value = args.value
+
+        statsSystem:AddModifier(playerID, modifier)
+    end)
+
+    if not ok then
+        return nil, "Failed to set stat: " .. tostring(err)
+    end
+
+    return {stat = args.stat, value = args.value, success = true}
+end
+
+function handlers.apply_status_effect(args)
+    if not args or not args.effectId then
+        return nil, "effectId is required"
+    end
+
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local ok, err = pcall(function()
+        local ses = Game.GetStatusEffectSystem()
+        local tdbid = TweakDBID.new(args.effectId)
+        ses:ApplyStatusEffect(player:GetEntityID(), tdbid)
+    end)
+
+    if not ok then
+        return nil, "Failed to apply status effect: " .. tostring(err)
+    end
+
+    return {effectId = args.effectId, applied = true}
+end
+
+function handlers.remove_status_effect(args)
+    if not args or not args.effectId then
+        return nil, "effectId is required"
+    end
+
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local ok, err = pcall(function()
+        local ses = Game.GetStatusEffectSystem()
+        local tdbid = TweakDBID.new(args.effectId)
+        ses:RemoveStatusEffect(player:GetEntityID(), tdbid)
+    end)
+
+    if not ok then
+        return nil, "Failed to remove status effect: " .. tostring(err)
+    end
+
+    return {effectId = args.effectId, removed = true}
+end
+
+-- World handlers
+
+function handlers.spawn_vehicle(args)
+    if not args or not args.vehicleId then
+        return nil, "vehicleId is required"
+    end
+
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local ok, err = pcall(function()
+        local distance = args.distance or 5
+        local pos = player:GetWorldPosition()
+        local forward = player:GetWorldForward()
+
+        local spawnPos = Vector4.new(
+            pos.x + forward.x * distance,
+            pos.y + forward.y * distance,
+            pos.z,
+            1.0
+        )
+
+        Game.GetVehicleSystem():SpawnPlayerVehicle(
+            TweakDBID.new(args.vehicleId)
+        )
+    end)
+
+    if not ok then
+        return nil, "Failed to spawn vehicle: " .. tostring(err)
+    end
+
+    return {vehicleId = args.vehicleId, success = true}
+end
+
+function handlers.get_nearby_entities(args)
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local radius = (args and args.radius) or 20
+    local filterType = args and args.type
+    local limit = (args and args.limit) or 20
+    local entities = {}
+    local count = 0
+
+    local ok, err = pcall(function()
+        local searchQuery = Game['TSQ_ALL;']()
+        searchQuery.maxDistance = radius
+
+        local playerPos = player:GetWorldPosition()
+        local found = Game.GetTargetingSystem():GetTargetParts(player, searchQuery)
+
+        if not found then return end
+
+        for _, targetPart in ipairs(found) do
+            if count >= limit then break end
+
+            pcall(function()
+                local entity = targetPart:GetComponent():GetEntity()
+                if not entity then return end
+
+                local entityType = "Unknown"
+                local className = NameToString(entity:GetClassName())
+
+                if string.find(className, "NPC") or string.find(className, "Puppet") then
+                    entityType = "NPC"
+                elseif string.find(className, "Vehicle") or string.find(className, "vehicle") then
+                    entityType = "Vehicle"
+                elseif string.find(className, "Item") or string.find(className, "item") then
+                    entityType = "Item"
+                elseif string.find(className, "Device") or string.find(className, "device") then
+                    entityType = "Device"
+                end
+
+                local shouldInclude = true
+                if filterType then
+                    shouldInclude = (entityType == filterType)
+                end
+
+                if shouldInclude then
+                    local entPos = entity:GetWorldPosition()
+                    local dx = entPos.x - playerPos.x
+                    local dy = entPos.y - playerPos.y
+                    local dz = entPos.z - playerPos.z
+                    local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+
+                    local entry = {
+                        className = className,
+                        type = entityType,
+                        distance = math.floor(dist * 10) / 10,
+                        position = {x = entPos.x, y = entPos.y, z = entPos.z}
+                    }
+
+                    pcall(function()
+                        local displayName = entity:GetDisplayName()
+                        if displayName and displayName ~= "" then
+                            entry.name = displayName
+                        end
+                    end)
+
+                    table.insert(entities, entry)
+                    count = count + 1
+                end
+            end)
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to scan entities: " .. tostring(err)
+    end
+
+    return {radius = radius, count = count, entities = entities}
+end
+
+function handlers.set_time(args)
+    if not args or not args.hours then
+        return nil, "hours is required"
+    end
+
+    local hours = args.hours
+    local minutes = args.minutes or 0
+    local seconds = args.seconds or 0
+
+    local ok, err = pcall(function()
+        local timeSystem = Game.GetTimeSystem()
+        local currentTime = timeSystem:GetGameTime()
+        local currentDay = GameTime.Days(currentTime)
+
+        local newTime = GameTime.MakeGameTime(currentDay, hours, minutes, seconds)
+        local diff = newTime - currentTime
+
+        if GameTime.IsNegative(diff) then
+            diff = diff + GameTime.MakeGameTime(1, 0, 0, 0)
+        end
+
+        timeSystem:SetGameTimeBySeconds(GameTime.GetSeconds(currentTime) + GameTime.GetSeconds(diff))
+    end)
+
+    if not ok then
+        return nil, "Failed to set time: " .. tostring(err)
+    end
+
+    return {hours = hours, minutes = minutes, seconds = seconds, success = true}
+end
+
+function handlers.set_weather(args)
+    if not args or not args.weather then
+        return nil, "weather is required"
+    end
+
+    local weatherMap = {
+        Sunny = "24h_weather_sunny",
+        Cloudy = "24h_weather_cloudy",
+        Rain = "24h_weather_rain",
+        HeavyRain = "24h_weather_heavy_rain",
+        Fog = "24h_weather_fog",
+        Toxic = "24h_weather_toxic_rain",
+        Sandstorm = "24h_weather_sandstorm",
+        Pollution = "24h_weather_pollution"
+    }
+
+    local weatherId = weatherMap[args.weather]
+    if not weatherId then
+        local valid = {}
+        for k, _ in pairs(weatherMap) do
+            table.insert(valid, k)
+        end
+        return nil, "Unknown weather: " .. tostring(args.weather) .. ". Valid: " .. table.concat(valid, ", ")
+    end
+
+    local ok, err = pcall(function()
+        Game.GetWeatherSystem():SetWeather(weatherId, 5.0, 0)
+    end)
+
+    if not ok then
+        return nil, "Failed to set weather: " .. tostring(err)
+    end
+
+    return {weather = args.weather, weatherId = weatherId, success = true}
+end
+
 return handlers
