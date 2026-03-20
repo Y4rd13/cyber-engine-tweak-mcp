@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" font-family="Consolas, 'Courier New', monospace">
+  <defs>
+    <linearGradient id="cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1628"/>
+      <stop offset="100%" style="stop-color:#0d2137"/>
+    </linearGradient>
+    <linearGradient id="yellow-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fcee09;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#fcee09;stop-opacity:0.05"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="620" fill="url(#cyan-grad)" rx="8"/>
+
+  <!-- Title -->
+  <text x="500" y="35" text-anchor="middle" fill="#fcee09" font-size="18" font-weight="bold" filter="url(#glow)">CET MCP — Architecture Overview</text>
+
+  <!-- Claude Code Box -->
+  <rect x="30" y="60" width="280" height="200" fill="none" stroke="#00d4ff" stroke-width="1.5" rx="6" stroke-dasharray="6,3"/>
+  <text x="170" y="82" text-anchor="middle" fill="#00d4ff" font-size="13" font-weight="bold">CLAUDE CODE (Host)</text>
+
+  <rect x="50" y="100" width="240" height="60" fill="url(#yellow-grad)" stroke="#fcee09" stroke-width="1" rx="4"/>
+  <text x="170" y="122" text-anchor="middle" fill="#fcee09" font-size="12" font-weight="bold">Claude LLM</text>
+  <text x="170" y="140" text-anchor="middle" fill="#8899aa" font-size="10">Tool calls via MCP protocol</text>
+
+  <rect x="50" y="180" width="240" height="60" fill="url(#yellow-grad)" stroke="#00d4ff" stroke-width="1" rx="4"/>
+  <text x="170" y="202" text-anchor="middle" fill="#00d4ff" font-size="12" font-weight="bold">MCP Client</text>
+  <text x="170" y="220" text-anchor="middle" fill="#8899aa" font-size="10">JSON-RPC 2.0 over stdio</text>
+
+  <!-- Arrow: Claude to MCP Server -->
+  <line x1="310" y1="210" x2="370" y2="210" stroke="#fcee09" stroke-width="2" marker-end="url(#arrow-yellow)"/>
+  <text x="340" y="200" text-anchor="middle" fill="#fcee09" font-size="9">stdio</text>
+
+  <!-- MCP Server Box -->
+  <rect x="380" y="60" width="240" height="500" fill="none" stroke="#00ff88" stroke-width="1.5" rx="6"/>
+  <text x="500" y="82" text-anchor="middle" fill="#00ff88" font-size="13" font-weight="bold">MCP SERVER (Node.js)</text>
+
+  <rect x="400" y="100" width="200" height="50" fill="url(#yellow-grad)" stroke="#00ff88" stroke-width="1" rx="4"/>
+  <text x="500" y="120" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="bold">stdio Transport</text>
+  <text x="500" y="136" text-anchor="middle" fill="#8899aa" font-size="9">JSON-RPC handler</text>
+
+  <rect x="400" y="170" width="200" height="50" fill="url(#yellow-grad)" stroke="#00ff88" stroke-width="1" rx="4"/>
+  <text x="500" y="190" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="bold">Tool Registry</text>
+  <text x="500" y="206" text-anchor="middle" fill="#8899aa" font-size="9">execute_lua, get_game_state...</text>
+
+  <rect x="400" y="240" width="200" height="50" fill="url(#yellow-grad)" stroke="#00ff88" stroke-width="1" rx="4"/>
+  <text x="500" y="260" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="bold">TCP Client</text>
+  <text x="500" y="276" text-anchor="middle" fill="#8899aa" font-size="9">Connects to CET Bridge</text>
+
+  <rect x="400" y="310" width="200" height="50" fill="url(#yellow-grad)" stroke="#00ff88" stroke-width="1" rx="4"/>
+  <text x="500" y="330" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="bold">File IPC (Fallback)</text>
+  <text x="500" y="346" text-anchor="middle" fill="#8899aa" font-size="9">Write cmd → Poll result</text>
+
+  <rect x="400" y="380" width="200" height="50" fill="url(#yellow-grad)" stroke="#00ff88" stroke-width="1" rx="4"/>
+  <text x="500" y="400" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="bold">Log Watcher</text>
+  <text x="500" y="416" text-anchor="middle" fill="#8899aa" font-size="9">Tails scripting.log</text>
+
+  <rect x="400" y="450" width="200" height="50" fill="url(#yellow-grad)" stroke="#00ff88" stroke-width="1" rx="4"/>
+  <text x="500" y="470" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="bold">Game State Cache</text>
+  <text x="500" y="486" text-anchor="middle" fill="#8899aa" font-size="9">Connection status, responses</text>
+
+  <!-- Arrow: MCP Server to CET Bridge -->
+  <line x1="620" y1="265" x2="690" y2="265" stroke="#ff4444" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <text x="655" y="255" text-anchor="middle" fill="#ff4444" font-size="9">TCP</text>
+  <text x="655" y="280" text-anchor="middle" fill="#ff4444" font-size="8">localhost</text>
+
+  <!-- Cyberpunk Game Box -->
+  <rect x="700" y="60" width="280" height="500" fill="none" stroke="#ff4444" stroke-width="1.5" rx="6" stroke-dasharray="6,3"/>
+  <text x="840" y="82" text-anchor="middle" fill="#ff4444" font-size="13" font-weight="bold">CYBERPUNK 2077 (Game Process)</text>
+
+  <!-- RED4ext -->
+  <rect x="720" y="100" width="240" height="50" fill="url(#yellow-grad)" stroke="#ff6644" stroke-width="1" rx="4"/>
+  <text x="840" y="120" text-anchor="middle" fill="#ff6644" font-size="11" font-weight="bold">RED4ext</text>
+  <text x="840" y="136" text-anchor="middle" fill="#8899aa" font-size="9">Native plugin loader</text>
+
+  <!-- RedSocket -->
+  <rect x="720" y="170" width="240" height="50" fill="url(#yellow-grad)" stroke="#ff4444" stroke-width="1" rx="4"/>
+  <text x="840" y="190" text-anchor="middle" fill="#ff4444" font-size="11" font-weight="bold">RedSocket Plugin</text>
+  <text x="840" y="206" text-anchor="middle" fill="#8899aa" font-size="9">TCP server on localhost:port</text>
+
+  <!-- CET -->
+  <rect x="720" y="240" width="240" height="50" fill="url(#yellow-grad)" stroke="#fcee09" stroke-width="1" rx="4"/>
+  <text x="840" y="260" text-anchor="middle" fill="#fcee09" font-size="11" font-weight="bold">Cyber Engine Tweaks</text>
+  <text x="840" y="276" text-anchor="middle" fill="#8899aa" font-size="9">Lua VM + RTTI bindings</text>
+
+  <!-- CET Bridge Mod -->
+  <rect x="720" y="310" width="240" height="90" fill="url(#yellow-grad)" stroke="#ff44ff" stroke-width="1.5" rx="4"/>
+  <text x="840" y="332" text-anchor="middle" fill="#ff44ff" font-size="11" font-weight="bold">CETBridge Mod (Lua)</text>
+  <text x="840" y="350" text-anchor="middle" fill="#8899aa" font-size="9">Command dispatcher</text>
+  <text x="840" y="366" text-anchor="middle" fill="#8899aa" font-size="9">Lua executor (loadstring)</text>
+  <text x="840" y="382" text-anchor="middle" fill="#8899aa" font-size="9">State serializer</text>
+
+  <!-- Game Engine -->
+  <rect x="720" y="420" width="240" height="60" fill="url(#yellow-grad)" stroke="#ff6644" stroke-width="1" rx="4"/>
+  <text x="840" y="442" text-anchor="middle" fill="#ff6644" font-size="11" font-weight="bold">REDengine 4 (RTTI)</text>
+  <text x="840" y="460" text-anchor="middle" fill="#8899aa" font-size="9">Game.*, TweakDB, Observers</text>
+
+  <!-- Game World -->
+  <rect x="720" y="500" width="240" height="45" fill="url(#yellow-grad)" stroke="#ff6644" stroke-width="1" rx="4"/>
+  <text x="840" y="522" text-anchor="middle" fill="#ff6644" font-size="11" font-weight="bold">Game World</text>
+  <text x="840" y="536" text-anchor="middle" fill="#8899aa" font-size="9">Player, NPCs, Items, World</text>
+
+  <!-- Vertical arrows inside game -->
+  <line x1="840" y1="150" x2="840" y2="170" stroke="#8899aa" stroke-width="1"/>
+  <line x1="840" y1="220" x2="840" y2="240" stroke="#8899aa" stroke-width="1"/>
+  <line x1="840" y1="290" x2="840" y2="310" stroke="#8899aa" stroke-width="1"/>
+  <line x1="840" y1="400" x2="840" y2="420" stroke="#8899aa" stroke-width="1"/>
+  <line x1="840" y1="480" x2="840" y2="500" stroke="#8899aa" stroke-width="1"/>
+
+  <!-- Vertical arrows inside MCP server -->
+  <line x1="500" y1="150" x2="500" y2="170" stroke="#8899aa" stroke-width="1"/>
+  <line x1="500" y1="220" x2="500" y2="240" stroke="#8899aa" stroke-width="1"/>
+  <line x1="500" y1="290" x2="500" y2="310" stroke="#8899aa" stroke-width="1"/>
+  <line x1="500" y1="360" x2="500" y2="380" stroke="#8899aa" stroke-width="1"/>
+  <line x1="500" y1="430" x2="500" y2="450" stroke="#8899aa" stroke-width="1"/>
+
+  <!-- Arrow from Claude to MCP Client -->
+  <line x1="170" y1="160" x2="170" y2="180" stroke="#8899aa" stroke-width="1"/>
+
+  <!-- Legend -->
+  <rect x="30" y="530" width="280" height="70" fill="url(#yellow-grad)" stroke="#8899aa" stroke-width="0.5" rx="4"/>
+  <text x="40" y="548" fill="#00d4ff" font-size="9">&#9632; Claude Code</text>
+  <text x="40" y="563" fill="#00ff88" font-size="9">&#9632; MCP Server (this project)</text>
+  <text x="40" y="578" fill="#ff4444" font-size="9">&#9632; Game Process</text>
+  <text x="40" y="593" fill="#ff44ff" font-size="9">&#9632; CET Bridge Mod (this project)</text>
+  <text x="170" y="548" fill="#fcee09" font-size="9">&#9632; CET / LLM</text>
+  <text x="170" y="563" fill="#ff6644" font-size="9">&#9632; Game Engine</text>
+  <text x="170" y="578" fill="#8899aa" font-size="9">- - - Process boundary</text>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrow-yellow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#fcee09"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff4444"/>
+    </marker>
+  </defs>
+</svg>

@@ -1,0 +1,20 @@
+node_modules/
+build/
+*.js.map
+*.d.ts
+!src/**/*.d.ts
+
+# IPC files
+command.json
+command.json.tmp
+response.json
+response.json.tmp
+heartbeat.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Consolas, 'Courier New', monospace">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1628"/>
+      <stop offset="100%" style="stop-color:#0d2137"/>
+    </linearGradient>
+    <marker id="a-y" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#fcee09"/>
+    </marker>
+    <marker id="a-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d4ff"/>
+    </marker>
+    <marker id="a-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff44ff"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg2)" rx="8"/>
+  <text x="400" y="30" text-anchor="middle" fill="#fcee09" font-size="16" font-weight="bold">CET Bridge Mod — Lifecycle &amp; Events</text>
+
+  <!-- Phase 1: Root level -->
+  <rect x="30" y="55" width="170" height="70" fill="none" stroke="#fcee09" stroke-width="1.5" rx="5"/>
+  <text x="115" y="75" text-anchor="middle" fill="#fcee09" font-size="11" font-weight="bold">Root Level</text>
+  <text x="115" y="92" text-anchor="middle" fill="#8899aa" font-size="9">registerForEvent()</text>
+  <text x="115" y="106" text-anchor="middle" fill="#8899aa" font-size="9">registerHotkey()</text>
+
+  <!-- Arrow -->
+  <line x1="200" y1="90" x2="240" y2="90" stroke="#fcee09" stroke-width="1.5" marker-end="url(#a-y)"/>
+
+  <!-- Phase 2: onInit -->
+  <rect x="250" y="55" width="170" height="70" fill="none" stroke="#00ff88" stroke-width="1.5" rx="5"/>
+  <text x="335" y="75" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="bold">onInit</text>
+  <text x="335" y="92" text-anchor="middle" fill="#8899aa" font-size="9">Setup RedSocket</text>
+  <text x="335" y="106" text-anchor="middle" fill="#8899aa" font-size="9">Register Observers</text>
+
+  <!-- Arrow -->
+  <line x1="420" y1="90" x2="460" y2="90" stroke="#fcee09" stroke-width="1.5" marker-end="url(#a-y)"/>
+
+  <!-- Phase 3: Game Loop -->
+  <rect x="470" y="45" width="300" height="90" fill="none" stroke="#00d4ff" stroke-width="1.5" rx="5"/>
+  <text x="620" y="65" text-anchor="middle" fill="#00d4ff" font-size="11" font-weight="bold">Game Loop (every frame)</text>
+
+  <rect x="485" y="78" width="120" height="30" fill="none" stroke="#ff44ff" stroke-width="1" rx="3"/>
+  <text x="545" y="98" text-anchor="middle" fill="#ff44ff" font-size="10">onUpdate(dt)</text>
+
+  <rect x="635" y="78" width="120" height="30" fill="none" stroke="#ff44ff" stroke-width="1" rx="3"/>
+  <text x="695" y="98" text-anchor="middle" fill="#ff44ff" font-size="10">onDraw</text>
+
+  <!-- Loop arrow -->
+  <path d="M 770 90 Q 790 90 790 50 Q 790 40 770 40 L 475 40 Q 465 40 465 50 L 465 78" fill="none" stroke="#00d4ff" stroke-width="1" marker-end="url(#a-c)"/>
+
+  <!-- onUpdate detail -->
+  <rect x="50" y="170" width="700" height="300" fill="none" stroke="#ff44ff" stroke-width="1" rx="5" stroke-dasharray="4,3"/>
+  <text x="400" y="190" text-anchor="middle" fill="#ff44ff" font-size="13" font-weight="bold">onUpdate Detail — Command Processing Loop</text>
+
+  <!-- Step boxes inside onUpdate -->
+  <rect x="80" y="210" width="180" height="55" fill="none" stroke="#fcee09" stroke-width="1" rx="4"/>
+  <text x="170" y="230" text-anchor="middle" fill="#fcee09" font-size="10" font-weight="bold">Check Pending</text>
+  <text x="170" y="248" text-anchor="middle" fill="#8899aa" font-size="9">RedSocket: OnCommand?</text>
+  <text x="170" y="260" text-anchor="middle" fill="#8899aa" font-size="9">File: io.open(cmd.json)?</text>
+
+  <line x1="260" y1="237" x2="300" y2="237" stroke="#fcee09" stroke-width="1.5" marker-end="url(#a-y)"/>
+
+  <rect x="310" y="210" width="160" height="55" fill="none" stroke="#00ff88" stroke-width="1" rx="4"/>
+  <text x="390" y="230" text-anchor="middle" fill="#00ff88" font-size="10" font-weight="bold">Parse Command</text>
+  <text x="390" y="248" text-anchor="middle" fill="#8899aa" font-size="9">JSON decode</text>
+  <text x="390" y="260" text-anchor="middle" fill="#8899aa" font-size="9">Validate type + payload</text>
+
+  <line x1="470" y1="237" x2="510" y2="237" stroke="#fcee09" stroke-width="1.5" marker-end="url(#a-y)"/>
+
+  <rect x="520" y="210" width="200" height="55" fill="none" stroke="#ff4444" stroke-width="1" rx="4"/>
+  <text x="620" y="230" text-anchor="middle" fill="#ff4444" font-size="10" font-weight="bold">Execute</text>
+  <text x="620" y="248" text-anchor="middle" fill="#8899aa" font-size="9">"exec" → loadstring(code)()</text>
+  <text x="620" y="260" text-anchor="middle" fill="#8899aa" font-size="9">"query" → dispatch handler</text>
+
+  <!-- Result path -->
+  <line x1="620" y1="265" x2="620" y2="300" stroke="#fcee09" stroke-width="1.5" marker-end="url(#a-y)"/>
+
+  <rect x="520" y="310" width="200" height="55" fill="none" stroke="#00d4ff" stroke-width="1" rx="4"/>
+  <text x="620" y="330" text-anchor="middle" fill="#00d4ff" font-size="10" font-weight="bold">Serialize Result</text>
+  <text x="620" y="348" text-anchor="middle" fill="#8899aa" font-size="9">pcall() captures errors</text>
+  <text x="620" y="360" text-anchor="middle" fill="#8899aa" font-size="9">JSON encode response</text>
+
+  <line x1="520" y1="337" x2="470" y2="337" stroke="#fcee09" stroke-width="1.5" marker-end="url(#a-y)"/>
+
+  <rect x="280" y="310" width="180" height="55" fill="none" stroke="#ff44ff" stroke-width="1" rx="4"/>
+  <text x="370" y="330" text-anchor="middle" fill="#ff44ff" font-size="10" font-weight="bold">Send Response</text>
+  <text x="370" y="348" text-anchor="middle" fill="#8899aa" font-size="9">RedSocket: SendCommand()</text>
+  <text x="370" y="360" text-anchor="middle" fill="#8899aa" font-size="9">File: io.open(result.json)</text>
+
+  <line x1="280" y1="337" x2="230" y2="337" stroke="#fcee09" stroke-width="1.5" marker-end="url(#a-y)"/>
+
+  <rect x="80" y="310" width="140" height="55" fill="none" stroke="#00ff88" stroke-width="1" rx="4"/>
+  <text x="150" y="335" text-anchor="middle" fill="#00ff88" font-size="10" font-weight="bold">State Update</text>
+  <text x="150" y="353" text-anchor="middle" fill="#8899aa" font-size="9">Update game state</text>
+  <text x="150" y="365" text-anchor="middle" fill="#8899aa" font-size="9">cache if needed</text>
+
+  <!-- Shutdown -->
+  <rect x="300" y="440" width="200" height="40" fill="none" stroke="#ff4444" stroke-width="1.5" rx="5"/>
+  <text x="400" y="465" text-anchor="middle" fill="#ff4444" font-size="11" font-weight="bold">onShutdown → Cleanup</text>
+</svg>

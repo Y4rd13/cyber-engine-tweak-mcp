@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 580" font-family="Consolas, 'Courier New', monospace">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1628"/>
+      <stop offset="100%" style="stop-color:#0d2137"/>
+    </linearGradient>
+    <linearGradient id="yg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fcee09;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#fcee09;stop-opacity:0.03"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="580" fill="url(#bg3)" rx="8"/>
+  <text x="450" y="30" text-anchor="middle" fill="#fcee09" font-size="16" font-weight="bold">MCP Tools — Planned Tool Registry</text>
+
+  <!-- Category: Lua Execution -->
+  <rect x="30" y="50" width="260" height="240" fill="url(#yg)" stroke="#ff4444" stroke-width="1.5" rx="6"/>
+  <text x="160" y="72" text-anchor="middle" fill="#ff4444" font-size="13" font-weight="bold">Lua Execution</text>
+
+  <rect x="45" y="85" width="230" height="40" fill="none" stroke="#ff4444" stroke-width="0.8" rx="3"/>
+  <text x="60" y="102" fill="#fcee09" font-size="10" font-weight="bold">execute_lua</text>
+  <text x="60" y="117" fill="#8899aa" font-size="8">Run arbitrary Lua code in CET console</text>
+
+  <rect x="45" y="135" width="230" height="40" fill="none" stroke="#ff4444" stroke-width="0.8" rx="3"/>
+  <text x="60" y="152" fill="#fcee09" font-size="10" font-weight="bold">execute_lua_file</text>
+  <text x="60" y="167" fill="#8899aa" font-size="8">Execute a Lua script file via dofile()</text>
+
+  <rect x="45" y="185" width="230" height="40" fill="none" stroke="#ff4444" stroke-width="0.8" rx="3"/>
+  <text x="60" y="202" fill="#fcee09" font-size="10" font-weight="bold">evaluate_expression</text>
+  <text x="60" y="217" fill="#8899aa" font-size="8">Evaluate Lua expression and return result</text>
+
+  <rect x="45" y="235" width="230" height="40" fill="none" stroke="#ff4444" stroke-width="0.8" rx="3"/>
+  <text x="60" y="252" fill="#fcee09" font-size="10" font-weight="bold">batch_execute</text>
+  <text x="60" y="267" fill="#8899aa" font-size="8">Execute multiple commands sequentially</text>
+
+  <!-- Category: Game State -->
+  <rect x="320" y="50" width="260" height="240" fill="url(#yg)" stroke="#00d4ff" stroke-width="1.5" rx="6"/>
+  <text x="450" y="72" text-anchor="middle" fill="#00d4ff" font-size="13" font-weight="bold">Game State</text>
+
+  <rect x="335" y="85" width="230" height="40" fill="none" stroke="#00d4ff" stroke-width="0.8" rx="3"/>
+  <text x="350" y="102" fill="#fcee09" font-size="10" font-weight="bold">get_player_info</text>
+  <text x="350" y="117" fill="#8899aa" font-size="8">Level, health, location, equipped items</text>
+
+  <rect x="335" y="135" width="230" height="40" fill="none" stroke="#00d4ff" stroke-width="0.8" rx="3"/>
+  <text x="350" y="152" fill="#fcee09" font-size="10" font-weight="bold">get_game_state</text>
+  <text x="350" y="167" fill="#8899aa" font-size="8">Scene tier, time, weather, zone</text>
+
+  <rect x="335" y="185" width="230" height="40" fill="none" stroke="#00d4ff" stroke-width="0.8" rx="3"/>
+  <text x="350" y="202" fill="#fcee09" font-size="10" font-weight="bold">get_tweakdb_value</text>
+  <text x="350" y="217" fill="#8899aa" font-size="8">Read TweakDB flat/record by ID</text>
+
+  <rect x="335" y="235" width="230" height="40" fill="none" stroke="#00d4ff" stroke-width="0.8" rx="3"/>
+  <text x="350" y="252" fill="#fcee09" font-size="10" font-weight="bold">dump_type</text>
+  <text x="350" y="267" fill="#8899aa" font-size="8">Introspect game type via DumpType()</text>
+
+  <!-- Category: Mod Development -->
+  <rect x="610" y="50" width="260" height="240" fill="url(#yg)" stroke="#00ff88" stroke-width="1.5" rx="6"/>
+  <text x="740" y="72" text-anchor="middle" fill="#00ff88" font-size="13" font-weight="bold">Mod Development</text>
+
+  <rect x="625" y="85" width="230" height="40" fill="none" stroke="#00ff88" stroke-width="0.8" rx="3"/>
+  <text x="640" y="102" fill="#fcee09" font-size="10" font-weight="bold">list_mods</text>
+  <text x="640" y="117" fill="#8899aa" font-size="8">List all loaded CET mods</text>
+
+  <rect x="625" y="135" width="230" height="40" fill="none" stroke="#00ff88" stroke-width="0.8" rx="3"/>
+  <text x="640" y="152" fill="#fcee09" font-size="10" font-weight="bold">read_log</text>
+  <text x="640" y="167" fill="#8899aa" font-size="8">Read scripting.log or mod-specific log</text>
+
+  <rect x="625" y="185" width="230" height="40" fill="none" stroke="#00ff88" stroke-width="0.8" rx="3"/>
+  <text x="640" y="202" fill="#fcee09" font-size="10" font-weight="bold">reload_mods</text>
+  <text x="640" y="217" fill="#8899aa" font-size="8">Trigger CET "Reload All Mods"</text>
+
+  <rect x="625" y="235" width="230" height="40" fill="none" stroke="#00ff88" stroke-width="0.8" rx="3"/>
+  <text x="640" y="252" fill="#fcee09" font-size="10" font-weight="bold">get_connection_status</text>
+  <text x="640" y="267" fill="#8899aa" font-size="8">Check CET bridge connectivity</text>
+
+  <!-- Category: TweakDB Operations -->
+  <rect x="30" y="310" width="260" height="240" fill="url(#yg)" stroke="#ff44ff" stroke-width="1.5" rx="6"/>
+  <text x="160" y="332" text-anchor="middle" fill="#ff44ff" font-size="13" font-weight="bold">TweakDB Operations</text>
+
+  <rect x="45" y="345" width="230" height="40" fill="none" stroke="#ff44ff" stroke-width="0.8" rx="3"/>
+  <text x="60" y="362" fill="#fcee09" font-size="10" font-weight="bold">set_tweakdb_value</text>
+  <text x="60" y="377" fill="#8899aa" font-size="8">Write a TweakDB flat value</text>
+
+  <rect x="45" y="395" width="230" height="40" fill="none" stroke="#ff44ff" stroke-width="0.8" rx="3"/>
+  <text x="60" y="412" fill="#fcee09" font-size="10" font-weight="bold">clone_record</text>
+  <text x="60" y="427" fill="#8899aa" font-size="8">Clone an existing TweakDB record</text>
+
+  <rect x="45" y="445" width="230" height="40" fill="none" stroke="#ff44ff" stroke-width="0.8" rx="3"/>
+  <text x="60" y="462" fill="#fcee09" font-size="10" font-weight="bold">search_tweakdb</text>
+  <text x="60" y="477" fill="#8899aa" font-size="8">Search records by pattern/type</text>
+
+  <rect x="45" y="495" width="230" height="40" fill="none" stroke="#ff44ff" stroke-width="0.8" rx="3"/>
+  <text x="60" y="512" fill="#fcee09" font-size="10" font-weight="bold">get_record</text>
+  <text x="60" y="527" fill="#8899aa" font-size="8">Full record dump with all fields</text>
+
+  <!-- Category: Observation -->
+  <rect x="320" y="310" width="260" height="240" fill="url(#yg)" stroke="#ff6644" stroke-width="1.5" rx="6"/>
+  <text x="450" y="332" text-anchor="middle" fill="#ff6644" font-size="13" font-weight="bold">Observation</text>
+
+  <rect x="335" y="345" width="230" height="40" fill="none" stroke="#ff6644" stroke-width="0.8" rx="3"/>
+  <text x="350" y="362" fill="#fcee09" font-size="10" font-weight="bold">observe_events</text>
+  <text x="350" y="377" fill="#8899aa" font-size="8">Subscribe to game events stream</text>
+
+  <rect x="335" y="395" width="230" height="40" fill="none" stroke="#ff6644" stroke-width="0.8" rx="3"/>
+  <text x="350" y="412" fill="#fcee09" font-size="10" font-weight="bold">get_observations</text>
+  <text x="350" y="427" fill="#8899aa" font-size="8">Read buffered event observations</text>
+
+  <rect x="335" y="445" width="230" height="40" fill="none" stroke="#ff6644" stroke-width="0.8" rx="3"/>
+  <text x="350" y="462" fill="#fcee09" font-size="10" font-weight="bold">watch_variable</text>
+  <text x="350" y="477" fill="#8899aa" font-size="8">Track a game variable over time</text>
+
+  <rect x="335" y="495" width="230" height="40" fill="none" stroke="#ff6644" stroke-width="0.8" rx="3"/>
+  <text x="350" y="512" fill="#fcee09" font-size="10" font-weight="bold">clear_observations</text>
+  <text x="350" y="527" fill="#8899aa" font-size="8">Clear observation buffer</text>
+
+  <!-- Category: Inventory -->
+  <rect x="610" y="310" width="260" height="240" fill="url(#yg)" stroke="#44ddff" stroke-width="1.5" rx="6"/>
+  <text x="740" y="332" text-anchor="middle" fill="#44ddff" font-size="13" font-weight="bold">Inventory &amp; World</text>
+
+  <rect x="625" y="345" width="230" height="40" fill="none" stroke="#44ddff" stroke-width="0.8" rx="3"/>
+  <text x="640" y="362" fill="#fcee09" font-size="10" font-weight="bold">add_item</text>
+  <text x="640" y="377" fill="#8899aa" font-size="8">Add item to player inventory</text>
+
+  <rect x="625" y="395" width="230" height="40" fill="none" stroke="#44ddff" stroke-width="0.8" rx="3"/>
+  <text x="640" y="412" fill="#fcee09" font-size="10" font-weight="bold">teleport</text>
+  <text x="640" y="427" fill="#8899aa" font-size="8">Teleport player to coordinates</text>
+
+  <rect x="625" y="445" width="230" height="40" fill="none" stroke="#44ddff" stroke-width="0.8" rx="3"/>
+  <text x="640" y="462" fill="#fcee09" font-size="10" font-weight="bold">spawn_entity</text>
+  <text x="640" y="477" fill="#8899aa" font-size="8">Spawn NPC or object at position</text>
+
+  <rect x="625" y="495" width="230" height="40" fill="none" stroke="#44ddff" stroke-width="0.8" rx="3"/>
+  <text x="640" y="512" fill="#fcee09" font-size="10" font-weight="bold">get_nearby_entities</text>
+  <text x="640" y="527" fill="#8899aa" font-size="8">List entities within radius</text>
+</svg>

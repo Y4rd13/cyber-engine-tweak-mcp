@@ -1,0 +1,24 @@
+{
+  "name": "cet-mcp",
+  "version": "0.1.0",
+  "description": "MCP server bridging Claude Code with Cyber Engine Tweaks in Cyberpunk 2077",
+  "type": "module",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "inspect": "npm run build && npx @modelcontextprotocol/inspector node build/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
