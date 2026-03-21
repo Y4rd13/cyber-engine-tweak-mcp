@@ -1,6 +1,6 @@
 # CET MCP — Cyberpunk 2077 AI Bridge
 
-MCP server that connects Claude Code to Cyber Engine Tweaks (CET) in Cyberpunk 2077. Execute Lua code, query game state, manipulate TweakDB, and observe game events — all from your terminal while the game is running.
+MCP server that connects Claude Code to Cyber Engine Tweaks (CET) in Cyberpunk 2077. Execute Lua code, query game state, manipulate TweakDB, manage inventory, and observe game events — all from your terminal while the game is running.
 
 ## How it works
 
@@ -8,7 +8,9 @@ MCP server that connects Claude Code to Cyber Engine Tweaks (CET) in Cyberpunk 2
 Claude Code → stdio/JSON-RPC → MCP Server → TCP (RedSocket) → CET Bridge Mod → Game Engine
 ```
 
-The MCP server runs as a Claude Code subprocess. It opens a TCP server on `localhost:27010`. The CET Bridge Mod (Lua) connects to it via [RedSocket](https://github.com/rayshader/cp2077-red-socket) and executes commands in the game's Lua VM. Falls back to file-based IPC if RedSocket is not installed.
+The MCP server runs as a Claude Code subprocess. It opens a TCP server on `localhost:27010`. The CET Bridge Mod (Lua) connects to it via [RedSocket](https://github.com/rayshader/cp2077-red-socket) and executes commands in the game's Lua VM. Falls back to file-based IPC automatically if RedSocket is not installed or if the TCP port is already in use (multiple sessions supported).
+
+Pairs with [WolvenKit MCP](https://github.com/Y4rd13/wolvenkit-mcp) for a complete AI-assisted modding pipeline.
 
 ## Requirements
 
@@ -29,11 +31,14 @@ npm run build
 # 2. Copy CET mod to game directory
 cp -r cet-mod/CETBridge "/path/to/Cyberpunk 2077/bin/x64/plugins/cyber_engine_tweaks/mods/CETBridge"
 
-# 3. Claude Code picks up .mcp.json automatically when you open this project
-# Edit .mcp.json if your game path differs from the default
+# 3. Add to Claude Code globally
+claude mcp add cet-bridge -s user \
+  -e "CET_BRIDGE_DIR=/path/to/cyber_engine_tweaks/mods/CETBridge" \
+  -e "CET_TRANSPORT=tcp" \
+  -- node /path/to/cyber-engine-tweak-mcp/build/index.js
 ```
 
-## Tools (16)
+## Tools (26)
 
 ### Execution
 | Tool | Description |
@@ -49,6 +54,28 @@ cp -r cet-mod/CETBridge "/path/to/Cyberpunk 2077/bin/x64/plugins/cyber_engine_tw
 | `get_game_state` | In-game time, scene tier, weather, zone type |
 | `add_item` | Add item to inventory by TweakDB ID |
 | `teleport` | Teleport player to world coordinates |
+| `set_time` | Change in-game time of day |
+| `set_weather` | Change weather (Sunny, Rain, Fog, Sandstorm, etc.) |
+
+### Inventory
+| Tool | Description |
+|------|-------------|
+| `get_inventory` | List player inventory with type filtering |
+| `remove_item` | Remove items from inventory |
+| `get_equipped` | Show currently equipped weapons, clothing, cyberware |
+
+### Player
+| Tool | Description |
+|------|-------------|
+| `set_stat` | Modify player stats (Health, Armor, Level, etc.) |
+| `apply_status_effect` | Apply buffs/debuffs to the player |
+| `remove_status_effect` | Remove status effects |
+
+### World
+| Tool | Description |
+|------|-------------|
+| `spawn_vehicle` | Spawn a vehicle near the player |
+| `get_nearby_entities` | Scan for nearby NPCs, vehicles, items |
 
 ### TweakDB
 | Tool | Description |
@@ -67,28 +94,11 @@ cp -r cet-mod/CETBridge "/path/to/Cyberpunk 2077/bin/x64/plugins/cyber_engine_tw
 ### Dev Tools
 | Tool | Description |
 |------|-------------|
-| `get_connection_status` | Check bridge connectivity (works without game) |
+| `get_connection_status` | Check bridge connectivity and transport type |
 | `read_log` | Read CET scripting.log |
 | `list_mods` | List installed CET mods |
 
 ## Configuration
-
-`.mcp.json` in the project root configures Claude Code:
-
-```json
-{
-  "mcpServers": {
-    "cet-bridge": {
-      "command": "node",
-      "args": ["build/index.js"],
-      "env": {
-        "CET_BRIDGE_DIR": "/path/to/cyber_engine_tweaks/mods/CETBridge",
-        "CET_TRANSPORT": "tcp"
-      }
-    }
-  }
-}
-```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -96,15 +106,12 @@ cp -r cet-mod/CETBridge "/path/to/Cyberpunk 2077/bin/x64/plugins/cyber_engine_tw
 | `CET_TRANSPORT` | `tcp` | Transport: `tcp` (RedSocket) or `file` (fallback) |
 | `CET_TCP_PORT` | `27010` | TCP server port |
 
-CET mod config in `cet-mod/CETBridge/config.lua`:
+## Multi-Session Support
 
-```lua
-local config = {
-    transport = "tcp",      -- "tcp" or "file"
-    tcp_host = "127.0.0.1",
-    tcp_port = 27010,
-}
-```
+Multiple Claude Code sessions can use `cet-bridge` simultaneously:
+- **First session**: binds TCP port 27010 (fast, ~1ms)
+- **Additional sessions**: automatically fall back to file-based IPC (~16-33ms)
+- No session crashes — the fallback is seamless
 
 ## Architecture
 
