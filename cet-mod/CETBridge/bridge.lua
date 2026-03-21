@@ -99,15 +99,13 @@ function bridge:Update(dt)
 
         if config.transport == "tcp" then
             self:TcpHeartbeat()
-        else
-            self:WriteHeartbeat()
         end
+        -- Always write file heartbeat so file-based sessions can detect us
+        self:WriteHeartbeat()
     end
 
-    -- Poll for commands (file transport only)
-    if config.transport == "file" then
-        self:PollFileCommand()
-    end
+    -- Always poll for file commands (supports multiple sessions)
+    self:PollFileCommand()
 end
 
 function bridge:TcpHeartbeat()
