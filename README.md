@@ -38,7 +38,7 @@ claude mcp add cet-bridge -s user \
   -- node /path/to/cyber-engine-tweak-mcp/build/index.js
 ```
 
-## Tools (26)
+## Tools (37)
 
 ### Execution
 | Tool | Description |
@@ -70,12 +70,27 @@ claude mcp add cet-bridge -s user \
 | `set_stat` | Modify player stats (Health, Armor, Level, etc.) |
 | `apply_status_effect` | Apply buffs/debuffs to the player |
 | `remove_status_effect` | Remove status effects |
+| `get_active_effects` | List all active status effects on the player |
+| `toggle_god_mode` | Toggle invulnerability on/off |
+| `set_level` | Set player level and/or street cred directly |
+| `get_appearance_info` | Get player's current visual appearance |
+| `get_vehicle_list` | List all vehicles in the player's garage |
 
 ### World
 | Tool | Description |
 |------|-------------|
 | `spawn_vehicle` | Spawn a vehicle near the player |
 | `get_nearby_entities` | Scan for nearby NPCs, vehicles, items |
+| `kill_nearby_npcs` | Kill hostile (or all) NPCs in radius |
+| `show_notification` | Show in-game UI notification |
+| `play_sound` | Play a sound event in-game |
+| `get_scanner_info` | Get info about the entity you're looking at |
+
+### Quest
+| Tool | Description |
+|------|-------------|
+| `get_quest_fact` | Read a quest progression flag |
+| `set_quest_fact` | Set a quest progression flag |
 
 ### TweakDB
 | Tool | Description |
