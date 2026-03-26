@@ -881,4 +881,347 @@ function handlers.set_weather(args)
     return {weather = args.weather, weatherId = weatherId, success = true}
 end
 
+-- Quest handlers
+
+function handlers.get_quest_fact(args)
+    if not args or not args.factName then
+        return nil, "factName is required"
+    end
+
+    local ok, value = pcall(function()
+        return Game.GetQuestsSystem():GetFact(CName.new(args.factName))
+    end)
+
+    if not ok then
+        return nil, "Failed to get quest fact: " .. tostring(value)
+    end
+
+    return {factName = args.factName, value = value}
+end
+
+function handlers.set_quest_fact(args)
+    if not args or not args.factName or args.value == nil then
+        return nil, "factName and value are required"
+    end
+
+    local ok, err = pcall(function()
+        Game.GetQuestsSystem():SetFact(CName.new(args.factName), args.value)
+    end)
+
+    if not ok then
+        return nil, "Failed to set quest fact: " .. tostring(err)
+    end
+
+    return {factName = args.factName, value = args.value, success = true}
+end
+
+-- Extended player handlers
+
+function handlers.get_active_effects()
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local effects = {}
+
+    local ok, err = pcall(function()
+        local ses = Game.GetStatusEffectSystem()
+        local appliedEffects = ses:GetAppliedEffects(player:GetEntityID())
+
+        if appliedEffects then
+            for _, effect in ipairs(appliedEffects) do
+                pcall(function()
+                    local entry = {
+                        id = TDBID.ToStringDEBUG(effect:GetRecord():GetID()),
+                        remainingDuration = effect:GetRemainingDuration(),
+                        stackCount = effect:GetStackCount()
+                    }
+                    table.insert(effects, entry)
+                end)
+            end
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to get effects: " .. tostring(err)
+    end
+
+    return {count = #effects, effects = effects}
+end
+
+function handlers.toggle_god_mode(args)
+    if not args or args.enabled == nil then
+        return nil, "enabled is required"
+    end
+
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local ok, err = pcall(function()
+        if args.enabled then
+            Game.GetGodModeSystem():AddGodMode(player:GetEntityID(), gameGodModeType.Invulnerable, CName.new("CETBridge"))
+        else
+            Game.GetGodModeSystem():RemoveGodMode(player:GetEntityID(), gameGodModeType.Invulnerable, CName.new("CETBridge"))
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to toggle god mode: " .. tostring(err)
+    end
+
+    return {godMode = args.enabled, success = true}
+end
+
+function handlers.set_level(args)
+    if not args then
+        return nil, "level or streetCred is required"
+    end
+
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local results = {}
+
+    if args.level then
+        local ok, err = pcall(function()
+            Game.SetLevel("Level", args.level, true)
+        end)
+        results.level = ok and args.level or ("Error: " .. tostring(err))
+    end
+
+    if args.streetCred then
+        local ok, err = pcall(function()
+            Game.SetLevel("StreetCred", args.streetCred, true)
+        end)
+        results.streetCred = ok and args.streetCred or ("Error: " .. tostring(err))
+    end
+
+    return results
+end
+
+function handlers.get_appearance_info()
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local info = {}
+
+    pcall(function()
+        local tpsSystem = Game.GetTransactionSystem()
+        info.currentAppearance = NameToString(player:GetCurrentAppearanceName())
+    end)
+
+    pcall(function()
+        info.className = NameToString(player:GetClassName())
+    end)
+
+    pcall(function()
+        local gender = player:GetResolvedGenderName()
+        if gender then
+            info.gender = NameToString(gender)
+        end
+    end)
+
+    return info
+end
+
+function handlers.get_vehicle_list()
+    local vehicles = {}
+
+    local ok, err = pcall(function()
+        local vehicleSystem = Game.GetVehicleSystem()
+        local playerVehicles = vehicleSystem:GetPlayerUnlockedVehicles()
+
+        if playerVehicles then
+            for _, vehicleData in ipairs(playerVehicles) do
+                pcall(function()
+                    local entry = {
+                        id = TDBID.ToStringDEBUG(vehicleData.recordID)
+                    }
+                    pcall(function()
+                        local record = TweakDB:GetRecord(vehicleData.recordID)
+                        if record then
+                            entry.name = Game.GetLocalizedText(record:DisplayName())
+                        end
+                    end)
+                    table.insert(vehicles, entry)
+                end)
+            end
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to get vehicles: " .. tostring(err)
+    end
+
+    return {count = #vehicles, vehicles = vehicles}
+end
+
+-- Extended world handlers
+
+function handlers.kill_nearby_npcs(args)
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local radius = (args and args.radius) or 30
+    local allNpcs = args and args.allNpcs or false
+    local killed = 0
+
+    local ok, err = pcall(function()
+        local searchQuery = Game['TSQ_NPC;']()
+        searchQuery.maxDistance = radius
+
+        local found = Game.GetTargetingSystem():GetTargetParts(player, searchQuery)
+        if not found then return end
+
+        for _, targetPart in ipairs(found) do
+            pcall(function()
+                local entity = targetPart:GetComponent():GetEntity()
+                if not entity then return end
+
+                local npc = entity
+                local shouldKill = allNpcs
+
+                if not shouldKill then
+                    pcall(function()
+                        local attAgent = npc:GetAttitudeAgent()
+                        if attAgent then
+                            local attitude = attAgent:GetAttitudeTowards(player:GetAttitudeAgent())
+                            shouldKill = (attitude == EAIAttitude.AIA_Hostile)
+                        end
+                    end)
+                end
+
+                if shouldKill then
+                    pcall(function()
+                        npc:Kill(player, false, false)
+                        killed = killed + 1
+                    end)
+                end
+            end)
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to kill NPCs: " .. tostring(err)
+    end
+
+    return {killed = killed, radius = radius, allNpcs = allNpcs}
+end
+
+function handlers.show_notification(args)
+    if not args or not args.message then
+        return nil, "message is required"
+    end
+
+    local ok, err = pcall(function()
+        local player = Game.GetPlayer()
+        if player then
+            player:SetWarningMessage(args.message)
+        else
+            error("Player not available")
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to show notification: " .. tostring(err)
+    end
+
+    return {message = args.message, shown = true}
+end
+
+function handlers.play_sound(args)
+    if not args or not args.soundEvent then
+        return nil, "soundEvent is required"
+    end
+
+    local ok, err = pcall(function()
+        local player = Game.GetPlayer()
+        if player then
+            GameObject.PlaySoundEvent(player, CName.new(args.soundEvent))
+        else
+            error("Player not available")
+        end
+    end)
+
+    if not ok then
+        return nil, "Failed to play sound: " .. tostring(err)
+    end
+
+    return {soundEvent = args.soundEvent, played = true}
+end
+
+function handlers.get_scanner_info()
+    local player = Game.GetPlayer()
+    if not player then
+        return nil, "Player not available"
+    end
+
+    local info = {}
+
+    local ok, err = pcall(function()
+        local targetingSystem = Game.GetTargetingSystem()
+        local lookAtTarget = targetingSystem:GetLookAtObject(player)
+
+        if not lookAtTarget then
+            error("No target in view — look at an entity first")
+        end
+
+        info.className = NameToString(lookAtTarget:GetClassName())
+
+        pcall(function()
+            info.displayName = lookAtTarget:GetDisplayName()
+        end)
+
+        pcall(function()
+            local pos = lookAtTarget:GetWorldPosition()
+            info.position = {x = pos.x, y = pos.y, z = pos.z}
+        end)
+
+        -- NPC-specific info
+        pcall(function()
+            local npc = lookAtTarget
+            local statsSystem = Game.GetStatsSystem()
+            local entityID = npc:GetEntityID()
+
+            info.level = math.floor(statsSystem:GetStatValue(entityID, gamedataStatType.Level))
+            info.health = math.floor(statsSystem:GetStatValue(entityID, gamedataStatType.Health))
+
+            pcall(function()
+                local statPoolSystem = Game.GetStatPoolsSystem()
+                info.currentHealth = math.floor(statPoolSystem:GetStatPoolValue(entityID, gamedataStatPoolType.Health))
+            end)
+        end)
+
+        pcall(function()
+            info.isNPC = lookAtTarget:IsNPC()
+        end)
+
+        pcall(function()
+            info.isDead = lookAtTarget:IsDead()
+        end)
+
+        pcall(function()
+            local record = TweakDB:GetRecord(lookAtTarget:GetRecordID())
+            if record then
+                info.recordId = TDBID.ToStringDEBUG(record:GetID())
+            end
+        end)
+    end)
+
+    if not ok then
+        return nil, tostring(err)
+    end
+
+    return info
+end
+
 return handlers

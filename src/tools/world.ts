@@ -111,4 +111,92 @@ export function registerWorldTools(
       }
     }
   );
+
+  server.tool(
+    "kill_nearby_npcs",
+    "Kill all hostile NPCs within a radius. Useful for clearing combat encounters during testing. Only affects NPCs currently in combat with the player.",
+    {
+      radius: z
+        .number()
+        .optional()
+        .default(30)
+        .describe("Kill radius in meters (default: 30)"),
+      allNpcs: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Kill ALL NPCs, not just hostiles (default: false, hostiles only)"),
+    },
+    async ({ radius, allNpcs }) => {
+      try {
+        const transport = getTransport();
+        const request = createRequest("query", {
+          handler: "kill_nearby_npcs",
+          args: { radius, allNpcs },
+        });
+        const response = await transport.send(request);
+        return formatToolResult(response);
+      } catch (e) {
+        return formatError(e instanceof Error ? e.message : String(e));
+      }
+    }
+  );
+
+  server.tool(
+    "show_notification",
+    "Show an in-game UI notification/warning message to the player. Useful for testing UI or signaling events.",
+    {
+      message: z.string().describe("Message text to display"),
+    },
+    async ({ message }) => {
+      try {
+        const transport = getTransport();
+        const request = createRequest("query", {
+          handler: "show_notification",
+          args: { message },
+        });
+        const response = await transport.send(request);
+        return formatToolResult(response);
+      } catch (e) {
+        return formatError(e instanceof Error ? e.message : String(e));
+      }
+    }
+  );
+
+  server.tool(
+    "play_sound",
+    "Play a sound event in-game. Example events: 'ui_menu_hover', 'ui_menu_click', 'w_gun_reload'. Use search_tweakdb with pattern 'sound' to discover sound event names.",
+    {
+      soundEvent: z.string().describe("Sound event name (e.g., 'ui_menu_hover')"),
+    },
+    async ({ soundEvent }) => {
+      try {
+        const transport = getTransport();
+        const request = createRequest("query", {
+          handler: "play_sound",
+          args: { soundEvent },
+        });
+        const response = await transport.send(request);
+        return formatToolResult(response);
+      } catch (e) {
+        return formatError(e instanceof Error ? e.message : String(e));
+      }
+    }
+  );
+
+  server.tool(
+    "get_scanner_info",
+    "Get detailed info about the entity the player is currently looking at (as if scanning). Returns entity type, name, health, level, faction, and more.",
+    {},
+    async () => {
+      try {
+        const transport = getTransport();
+        const request = createRequest("query", { handler: "get_scanner_info" });
+        const response = await transport.send(request);
+        return formatToolResult(response);
+      } catch (e) {
+        return formatError(e instanceof Error ? e.message : String(e));
+      }
+    }
+  );
 }

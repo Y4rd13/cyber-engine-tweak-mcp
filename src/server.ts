@@ -10,6 +10,7 @@ import { registerObservationTools } from "./tools/observation.js";
 import { registerInventoryTools } from "./tools/inventory.js";
 import { registerPlayerTools } from "./tools/player.js";
 import { registerWorldTools } from "./tools/world.js";
+import { registerQuestTools } from "./tools/quest.js";
 
 export interface ServerConfig {
   bridgeDir: string;
@@ -41,6 +42,7 @@ export async function createServer(config: ServerConfig): Promise<McpServer> {
   registerInventoryTools(server, getTransport);
   registerPlayerTools(server, getTransport);
   registerWorldTools(server, getTransport);
+  registerQuestTools(server, getTransport);
 
   return server;
 }
